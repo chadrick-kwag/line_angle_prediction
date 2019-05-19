@@ -116,10 +116,39 @@ class ExistingDataProvider:
         label_data_list = np.array(label_data_list)
         return input_data_list, label_data_list
     
-        
+    def get_all_data(self):
+        input_data_list=[]
+        label_data_list=[]
 
+        for pp in self.filename_to_pp_dict.values():
+            imgpath = pp["imgpath"]
+            jsonpath = pp["jsonpath"]
+
+            # get img
+            imgmat = cv2.imread(imgpath)
+
+            img_h, img_w, _ = imgmat.shape
+
+            if img_h != self._desired_img_size[1] or img_w != self._desired_img_size[0]:
+                resized = cv2.resize(imgmat, self._desired_img_size)
+                imgmat = resized
             
+            # get angle gt data
+
+            with open(jsonpath, 'r') as fd:
+                annotjson = json.load(fd)
+            
+            angle = annotjson["angle"]
+            gt_angle = angle / (2* np.pi)
         
+            input_data_list.append(imgmat)
+            label_data_list.append([gt_angle])
+        
+        input_data_list = np.array(input_data_list)
+        label_data_list = np.array(label_data_list)
+
+        return input_data_list, label_data_list
+
     def _shuffle_keys(self):
         random.shuffle(self._dict_key_list)
 
