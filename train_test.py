@@ -1,4 +1,4 @@
-import tensorflow as tf 
+import tensorflow as tf, os, shutil, datetime
 
 from model_builder import build_model
 from dataprovider import ExistingDataProvider
@@ -18,6 +18,18 @@ from dataprovider import ExistingDataProvider
 
 imgdirpath = "testoutput/launcher_00/image"
 jsondirpath = "testoutput/launcher_00/annot"
+
+ckpt_dirpath = "ckpt"
+
+timestamp = datetime.datetime.now().strftime("%y%m%d_%H%M")
+
+summarydir = "tfsummary/{}".format(timestamp)
+
+if not os.path.exists(ckpt_dirpath):
+    os.makedirs(ckpt_dirpath)
+
+if not os.path.exists(summarydir):
+    os.makedirs(summarydir)
 
 model_input_size = (224,224)
 
@@ -44,11 +56,25 @@ model.summary()
 
 print("start model compile")
 # model.compile(optimizer = tf.optimizers.Adam(0.001), loss = "mse")
-model.compile(optimizer = tf.train.AdamOptimizer(0.0001), loss = tf.keras.losses.mse)
 
+metric_list=[
+    tf.keras.losses.MSE
+]
+
+model.compile(optimizer = tf.train.AdamOptimizer(0.0001), loss = tf.keras.losses.mse, metrics=metric_list)
+
+
+
+checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(os.path.join(ckpt_dirpath,"weights_{epoch:02d}"),save_weights_only=True, save_best_only=True)
+tfsummary_cb = tf.keras.callbacks.TensorBoard(summarydir)
+
+callback_list=[
+    checkpoint_callback,
+    tfsummary_cb
+]
 
 print("start fitting...")
-model.fit(input_data_list, label_data_list, epochs=100, batch_size=2)
+model.fit(input_data_list, label_data_list, epochs=100, batch_size=2, callbacks= callback_list)
 
 
 pred = model.predict(test_input_data_list)
