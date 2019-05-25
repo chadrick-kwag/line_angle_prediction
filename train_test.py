@@ -16,12 +16,12 @@ from dataprovider import ExistingDataProvider
 
 
 
-imgdirpath = "testoutput/launcher_00/image"
-jsondirpath = "testoutput/launcher_00/annot"
+imgdirpath = "testoutput/launcher/image"
+jsondirpath = "testoutput/launcher/annot"
 
-ckpt_dirpath = "ckpt"
+timestamp = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+ckpt_dirpath = "ckpt/{}".format(timestamp)
 
-timestamp = datetime.datetime.now().strftime("%y%m%d_%H%M")
 
 summarydir = "tfsummary/{}".format(timestamp)
 
@@ -34,6 +34,7 @@ if not os.path.exists(summarydir):
 model_input_size = (224,224)
 
 dp = ExistingDataProvider(imgdirpath, jsondirpath, model_input_size)
+print("loading dataprovider done")
 
 # input_data_list, label_data_list = dp.get_data(2)
 input_data_list, label_data_list = dp.get_all_data()
@@ -53,6 +54,14 @@ test_label_data_list = label_data_list[0:2]
 
 model = build_model()
 model.summary()
+
+
+modeljson = model.to_json()
+
+model_arch_save_path = os.path.join(ckpt_dirpath, "model_arch.json")
+
+with open(model_arch_save_path,'w') as fd:
+    fd.write(modeljson)
 
 print("start model compile")
 # model.compile(optimizer = tf.optimizers.Adam(0.001), loss = "mse")
@@ -74,7 +83,7 @@ callback_list=[
 ]
 
 print("start fitting...")
-model.fit(input_data_list, label_data_list, epochs=100, batch_size=2, callbacks= callback_list)
+model.fit(input_data_list, label_data_list, epochs=100, batch_size=8, callbacks= callback_list)
 
 
 pred = model.predict(test_input_data_list)

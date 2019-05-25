@@ -1,4 +1,5 @@
 import os, shutil
+from tqdm import tqdm
 from multiprocessing import Pool
 from work_thread import gen_data_and_save
 
@@ -25,17 +26,20 @@ color = (0,0,0)
 
 pool = Pool(processes=3)
 
+gen_image_num = 10000
 
 arg_list=[]
 async_result_list=[]
 
-for i in range(5):
-    arg = (imgsize, line_width_range, color, f"{i:03d}", img_savedir, json_savedir)
+for i in tqdm(range(gen_image_num)):
+    arg = (imgsize, line_width_range, color, f"{i:08d}", img_savedir, json_savedir)
     # arg_list.append(arg)\
     result = pool.apply_async(gen_data_and_save, arg )
     async_result_list.append(result)
 
 
-for res in async_result_list:
+for i,res in enumerate(async_result_list):
     res.get()
+    if i%100==0:
+        print("{} done".format(i))
 
