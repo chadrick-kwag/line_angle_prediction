@@ -139,7 +139,7 @@ class ExistingDataProvider:
                 annotjson = json.load(fd)
             
             angle = annotjson["angle"]
-            gt_angle = angle / (2* np.pi)
+            gt_angle = angle / np.pi
         
             input_data_list.append(imgmat)
             label_data_list.append([gt_angle])

@@ -1,15 +1,22 @@
-import cv2, os, json
+import cv2, os, json, shutil
 import tensorflow as tf , numpy as np
 from dataprovider import ExistingDataProvider
 
 
 
-model_json_path = "ckpt/190525_161854/model_arch.json"
-weight_path = "ckpt/190525_161854/weights_34"
+model_json_path = "ckpt/190527_000322/model_arch.json"
+weight_path = "ckpt/190527_000322/weights_epoch_0026_vl_0.00002115"
 
 # testimg = "/home/chadrick/prj/line_angle_prediction/testoutput/datagen_test/test.png"
-loadimgdir = "testoutput/launcher_00/image"
-loadannotdir = "testoutput/launcher_00/annot"
+loadimgdir = "testoutput/quickrun_train_data/image"
+loadannotdir = "testoutput/quickrun_train_data/annot"
+
+
+outputdir = "testoutput/predict_1"
+
+if os.path.exists(outputdir):
+    shutil.rmtree(outputdir)
+os.makedirs(outputdir)
 
 model_input_size = (224,224)
 
@@ -32,7 +39,10 @@ pred_result = model.predict(input_data_list)
 
 print(f"pred_result : {pred_result}")
 
-for pred_val, gt_val in zip(pred_result, label_data_list):
-    angle = pred_val * 360
-    print(f"pred_val: {pred_val}, gt_val={gt_val}, pred_angle: {angle}")
+for i, (img, pred_val, gt_val) in enumerate(zip(input_data_list, pred_result, label_data_list)):
+    savepath = os.path.join(outputdir, f"{i:03d}.png")
+    cv2.imwrite(savepath, img)
+
+    angle = pred_val * 180
+    print(f"index: {i:03d}, pred_val: {pred_val}, gt_val={gt_val}, pred_angle(deg): {angle}")
 

@@ -21,6 +21,11 @@ with open(args.configfile, 'r') as fd:
 imgdirpath = confjson["imgdirpath"]
 jsondirpath = confjson["annotdirpath"]
 
+val_imgdir = confjson["validation_imgdirpath"]
+val_annotdir = confjson["validation_annotdirpath"]
+
+
+
 restore_ckpt_path = confjson.get("restore_ckpt", None)
 
 timestamp = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
@@ -48,8 +53,15 @@ print(f"sample input_data shape: {input_data_list[0].shape}")
 print(f"sample label data: {label_data_list[0]}")
 
 
+valdp = ExistingDataProvider(val_imgdir, val_annotdir, model_input_size)
+
+val_data = valdp.get_all_data()
+
+print(f"validation data size: {len(val_data[0])}")
+
+
 model = build_model()
-model.summary()
+# model.summary()
 
 
 modeljson = model.to_json()
@@ -66,7 +78,7 @@ metric_list=[
     tf.keras.losses.MSE
 ]
 
-model.compile(optimizer = tf.train.AdamOptimizer(0.0001), loss = tf.keras.losses.mse, metrics=metric_list)
+model.compile(optimizer = tf.train.AdamOptimizer(0.00005), loss = tf.keras.losses.mse, metrics=metric_list)
 
 
 
@@ -81,7 +93,7 @@ else:
 
 
 
-checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(os.path.join(ckpt_dirpath,"weights_{epoch:04d}"),save_weights_only=True, save_best_only=True, monitor="loss")
+checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(os.path.join(ckpt_dirpath,"weights_epoch_{epoch:04d}_vl_{val_loss:.8f}"),save_weights_only=True, save_best_only=True, monitor="val_loss")
 tfsummary_cb = tf.keras.callbacks.TensorBoard(summarydir)
 
 callback_list=[
@@ -90,4 +102,4 @@ callback_list=[
 ]
 
 print("start fitting...")
-model.fit(input_data_list, label_data_list, epochs=100, batch_size=8, callbacks= callback_list)
+model.fit(input_data_list, label_data_list, epochs=100, batch_size=8, callbacks= callback_list, validation_data=val_data)
