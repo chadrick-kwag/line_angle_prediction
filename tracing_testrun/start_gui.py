@@ -1,4 +1,9 @@
-import cv2,datetime, os
+import cv2,datetime, os, sys, shutil
+
+sys.path.append(os.path.abspath(".."))
+
+from Predictor import Predictor
+from consecutive_shifting import predict_for_n_runs_and_save_movement
 
 
 def fetch_start_and_endpoint():
@@ -42,11 +47,6 @@ def callback(event, x,y,flags, param):
         print(f"setting endpoint = {(x,y)}")
 
     
-    
-# up: 82
-# down: 84
-# left: 81
-# right: 83
 
 
 direction_key_val = [81,82,83,84,119,97, 100, 115]
@@ -83,7 +83,6 @@ while True:
         p2 = central_data["endpoint"]
 
         cv2.rectangle(draw_img, p1,p2,(0,0,255),2)
-    print(f"points_exist_flag: {points_exist_flag}")
 
     cv2.imshow("image", draw_img)
     retkey = cv2.waitKey(25)
@@ -140,6 +139,19 @@ cv2.destroyAllWindows()
 
 print(f"confirm flag = {confirm_flag}")
 
+if not confirm_flag:
+    print("no confirmation. abort")
+    sys.exit(0)
+
+# create outputdir
+
+outputdir = f"testoutput/tracing_test"
+
+if os.path.exists(outputdir):
+    shutil.rmtree(outputdir)
+os.makedirs(outputdir)
+
+
 # squarify the roi
 
 startpoint = central_data["startpoint"]
@@ -161,6 +173,15 @@ y2 = int(cy + square_w/2)
 roi_coord = [x1,y1,x2,y2]
 print(f"roi_coord = {roi_coord}")
 
+# create predictor
+
+predictor_config_filepath = "/home/chadrick/prj/line_angle_prediction/testinput/predictor_config/config_0.json"
+
+print("loading predictor...")
+
+predictor = Predictor(predictor_config_filepath)
+
+print("predictor loading complete.")
 
 
-
+predict_for_n_runs_and_save_movement(roi_coord, img, outputdir, predictor, 10)
