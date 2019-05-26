@@ -1,7 +1,20 @@
-import os, shutil
+import os, shutil, argparse
 from tqdm import tqdm
 from multiprocessing import Pool
 from work_thread import gen_data_and_save
+
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("gensize",type=int,help="size of data to generate")
+
+args = parser.parse_args()
+
+if args.gensize <=0:
+    raise Exception("gensize should be > 0")
+
+
+
 
 
 filename, _ = os.path.splitext(__file__)
@@ -26,7 +39,7 @@ color = (0,0,0)
 
 pool = Pool(processes=3)
 
-gen_image_num = 10000
+gen_image_num = args.gensize
 
 arg_list=[]
 async_result_list=[]

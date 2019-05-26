@@ -1,23 +1,27 @@
-import tensorflow as tf, os, shutil, datetime
+import tensorflow as tf, os, shutil, datetime, argparse, json
 
 from model_builder import build_model
 from dataprovider import ExistingDataProvider
 
+parser = argparse.ArgumentParser()
 
-# config = tf.ConfigProto()
-# config.gpu_options.per_process_gpu_memory_fraction = 0.5
-# config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
-# config.log_device_placement = True 
+parser.add_argument("configfile", type=str, help="path to config file")
 
-# sess = tf.Session(config=config)
-# tf.keras.backend.set_session(sess)
+args = parser.parse_args()
 
+args.configfile = args.configfile.strip()
 
-
+if not os.path.exists(args.configfile):
+    raise Exception(f"{args.configfile} not exist")
 
 
-imgdirpath = "testoutput/launcher/image"
-jsondirpath = "testoutput/launcher/annot"
+with open(args.configfile, 'r') as fd:
+    confjson = json.load(fd)
+
+imgdirpath = confjson["imgdirpath"]
+jsondirpath = confjson["annotdirpath"]
+
+restore_ckpt_path = confjson.get("restore_ckpt", None)
 
 timestamp = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
 ckpt_dirpath = "ckpt/{}".format(timestamp)
@@ -36,20 +40,12 @@ model_input_size = (224,224)
 dp = ExistingDataProvider(imgdirpath, jsondirpath, model_input_size)
 print("loading dataprovider done")
 
-# input_data_list, label_data_list = dp.get_data(2)
 input_data_list, label_data_list = dp.get_all_data()
 
+print(f"train data size: {len(input_data_list)}")
 
 print(f"sample input_data shape: {input_data_list[0].shape}")
 print(f"sample label data: {label_data_list[0]}")
-
-
-test_input_data_list = input_data_list[0:2]
-test_label_data_list = label_data_list[0:2]
-
-# print(f"data list size: {len(data_list)}")
-# print(data_list)
-
 
 
 model = build_model()
@@ -74,7 +70,18 @@ model.compile(optimizer = tf.train.AdamOptimizer(0.0001), loss = tf.keras.losses
 
 
 
-checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(os.path.join(ckpt_dirpath,"weights_{epoch:02d}"),save_weights_only=True, save_best_only=True)
+if restore_ckpt_path:
+    print("start loading weights")
+    model.load_weights(restore_ckpt_path)
+    print(f"loading weight finished: {restore_ckpt_path}")
+else:
+    print("no loading weights. init from random")
+
+
+
+
+
+checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(os.path.join(ckpt_dirpath,"weights_{epoch:04d}"),save_weights_only=True, save_best_only=True, monitor="loss")
 tfsummary_cb = tf.keras.callbacks.TensorBoard(summarydir)
 
 callback_list=[
@@ -84,9 +91,3 @@ callback_list=[
 
 print("start fitting...")
 model.fit(input_data_list, label_data_list, epochs=100, batch_size=8, callbacks= callback_list)
-
-
-pred = model.predict(test_input_data_list)
-
-print(f"pred: {pred}")
-print(f"gt: {test_label_data_list}")

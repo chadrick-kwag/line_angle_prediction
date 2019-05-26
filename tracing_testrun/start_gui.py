@@ -1,4 +1,4 @@
-import cv2
+import cv2,datetime, os
 
 
 def fetch_start_and_endpoint():
@@ -19,6 +19,12 @@ def update_start_and_endpoint(sp,ep):
 
 
 testimg = "../testinput/track_run_testimg/track_testimg_0.png"
+
+timestamp = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+
+outputdir = f"testoutput/{timestamp}"
+
+os.makedirs(outputdir)
 
 
 central_data={
@@ -133,3 +139,28 @@ cv2.destroyAllWindows()
 
 
 print(f"confirm flag = {confirm_flag}")
+
+# squarify the roi
+
+startpoint = central_data["startpoint"]
+endpoint = central_data["endpoint"]
+
+cx = (startpoint[0] + endpoint[0]) / 2
+cy = (startpoint[1] + endpoint[1]) / 2
+
+w = abs(startpoint[0] - endpoint[0])
+h = abs(startpoint[1] - endpoint[1])
+
+square_w = min(w,h)
+
+x1 = int(cx - square_w/2)
+x2 = int(cx + square_w / 2)
+y1 = int(cy - square_w/2)
+y2 = int(cy + square_w/2)
+
+roi_coord = [x1,y1,x2,y2]
+print(f"roi_coord = {roi_coord}")
+
+
+
+

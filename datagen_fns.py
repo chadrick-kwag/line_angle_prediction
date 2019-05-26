@@ -25,9 +25,7 @@ def generate_data_v1(imgsize, line_width_range, color):
     # print(f"blank_canvas shape: {blank_canvas.shape}")
 
 
-    angle = random.random() * 2* np.pi
-
-    # print(f"angle: {angle}")
+    angle = random.random() * np.pi
 
     cp_x_range_min = img_w * 1/4
     cp_x_range_max = img_w * 3/4
@@ -41,15 +39,19 @@ def generate_data_v1(imgsize, line_width_range, color):
     cp_x = int(cp_x)
     cp_y = int(cp_y)
 
-    # print(f"centerpoint x={cp_x} y={cp_y}")
 
     length = max(img_w, img_h)
 
+    # dx = length * np.cos(angle)
+    # dy = length * np.sin(angle)
+
+    # deg_angle = angle / np.pi * 180
+
     p1_x = cp_x + length * np.cos(angle)
-    p1_y = cp_y + length * np.sin(angle)
+    p1_y = cp_y - length * np.sin(angle)
 
     p2_x = cp_x - length * np.cos(angle)
-    p2_y = cp_y - length * np.sin(angle)
+    p2_y = cp_y + length * np.sin(angle)
 
     p1_x = int(p1_x)
     p2_x = int(p2_x)
