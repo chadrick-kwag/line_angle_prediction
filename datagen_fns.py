@@ -2,7 +2,7 @@ import cv2, numpy as np, random, logging
 
 
 
-def generate_data_v1(imgsize, line_width_range, color):
+def generate_data_v1(imgsize, line_width_range, color, bg_color):
     """
 
     :param imgsize: tuple containing desired img size (img_w, img_h)
@@ -12,6 +12,8 @@ def generate_data_v1(imgsize, line_width_range, color):
     :returns: (imgmat, angle)
     """
 
+    assert len(bg_color)==3
+
     img_w, img_h = imgsize
     line_width_min, line_width_max = line_width_range
 
@@ -20,7 +22,7 @@ def generate_data_v1(imgsize, line_width_range, color):
 
 
     blank_canvas = np.ones((img_w, img_h, 3), dtype="uint8")
-    blank_canvas = blank_canvas * 255
+    blank_canvas[:,:] = list(bg_color)
 
     # print(f"blank_canvas shape: {blank_canvas.shape}")
 
